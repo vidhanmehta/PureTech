@@ -1,12 +1,16 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from gemini_api import GeminiAPI
 
-# Function to scrape Amazon product details
-def scrape_amazon(url):
+# Initialize Gemini API
+gemini = GeminiAPI(api_key="your_gemini_api_key")
+
+def scrape_amazon_product(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
     }
+
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -50,56 +54,51 @@ def scrape_amazon(url):
     else:
         return None
 
-# Function to analyze ingredients using Gemini API
-def analyze_ingredients(ingredients):
-    # Use Gemini API to analyze ingredients and identify harmful ones
-    # Replace this with Gemini API call
+def analyze_ingredients(product_description):
+    # Use Gemini API to analyze the ingredients
+    ingredients = gemini.analyze_ingredients(product_description)
 
-    # Dummy response for demonstration
-    return {"harmful_ingredients": ["Artificial flavorings", "High-fructose corn syrup"]}
+    # Identify harmful ingredients
+    harmful_ingredients = [ingredient for ingredient in ingredients if ingredient.is_harmful]
 
-# Main Streamlit app
+    # Generate recommendations
+    recommendations = gemini.generate_recommendations(harmful_ingredients)
+
+    return harmful_ingredients, recommendations
+
 def main():
     st.title("Ingredient Analyzer")
 
-    # Get user input (Amazon URL)
-    amazon_url = st.text_input("Enter Amazon URL of the product:")
+    # User input for Amazon product URL
+    product_url = st.text_input("Enter the Amazon product URL:")
 
-    if st.button("Analyze Ingredients"):
-        # Scrape Amazon product details
-        product_details = scrape_amazon(amazon_url)
+    if st.button("Analyze"):
+        # Scrape product information from Amazon
+        product_info = scrape_amazon_product(product_url)
 
-        if product_details:
-            st.subheader("Product Details")
-            st.write("Title:", product_details["title"])
-            st.write("Rating:", product_details["rating"])
-            st.write("Price:", product_details["price"])
-            st.image(product_details["image"])
-            st.write("Description:", product_details["description"])
-            st.write("Number of Reviews:", product_details["reviews"])
+        if product_info:
+            # Display product information
+            st.header(product_info["title"])
+            st.image(product_info["image"])
+            st.write(f"Rating: {product_info['rating']}")
+            st.write(f"Price: {product_info['price']}")
+            st.write(f"Reviews: {product_info['reviews']}")
+            st.write(product_info["description"])
 
-            # Analyze ingredients using Gemini API
-            ingredients = []  # Extract ingredients from product details
-            analysis_result = analyze_ingredients(ingredients)
+            # Analyze ingredients using Gemini
+            harmful_ingredients, recommendations = analyze_ingredients(product_info["description"])
 
-            st.subheader("Ingredient Analysis")
-            if analysis_result:
-                harmful_ingredients = analysis_result.get("harmful_ingredients", [])
-                if harmful_ingredients:
-                    st.write("Harmful Ingredients Found:")
-                    for ingredient in harmful_ingredients:
-                        st.write("- ", ingredient)
-                    st.warning("This product contains harmful ingredients.")
+            # Display harmful ingredients and recommendations
+            if harmful_ingredients:
+                st.subheader("Harmful Ingredients:")
+                for ingredient in harmful_ingredients:
+                    st.write(ingredient.name)
 
-                    # Recommend alternative products
-                    st.subheader("Recommendations")
-                    # Implement recommendation logic based on harmful ingredients
-                else:
-                    st.success("No harmful ingredients found.")
-            else:
-                st.error("Failed to analyze ingredients.")
+            st.subheader("Recommendations:")
+            for recommendation in recommendations:
+                st.write(recommendation)
         else:
-            st.error("Failed to fetch product details from Amazon.")
+            st.error("Error: Unable to retrieve product information.")
 
 if __name__ == "__main__":
     main()
