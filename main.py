@@ -3,8 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 from gemini_api import GeminiAPI
 
-# Initialize Gemini API
-gemini = GeminiAPI(api_key="your_gemini_api_key")
+# Access Gemini API key from Streamlit secrets
+gemini_api_key = st.secrets["gemini_api_key"]
+gemini = GeminiAPI(api_key=gemini_api_key)
+
+# Remaining code remains the same as before
+# Include the scrape_amazon_product, analyze_ingredients, and main functions as previously provided
 
 def scrape_amazon_product(url):
     headers = {
