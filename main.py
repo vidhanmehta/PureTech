@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from gemini_api import GeminiAPI
+from gemini_api import *
 
 # Access Gemini API key from Streamlit secrets
 gemini_api_key = st.secrets["gemini_api_key"]
