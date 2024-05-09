@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 import streamlit as st
-import google.generativeai as gen_ai
 
 def extract_product_info(url):
-    webpage = requests.get(url)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+    webpage = requests.get(url, headers=headers)
     soup = BeautifulSoup(webpage.content, "html.parser")
 
     # Extract product title
@@ -49,5 +49,3 @@ if st.button("Show All Details"):
             st.image(image_url)
         else:
             st.write("Unable to extract product information. Please check the URL and try again.")
-
-
