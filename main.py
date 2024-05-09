@@ -1,108 +1,79 @@
-import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from gemini_api import *
+import streamlit as st
+import google.generativeai as gen_ai
 
-# Access Gemini API key from Streamlit secrets
-gemini_api_key = st.secrets["gemini_api_key"]
-gemini = GeminiAPI(api_key=gemini_api_key)
+def extract_product_info(url):
+    webpage = requests.get(url)
+    soup = BeautifulSoup(webpage.content, "html.parser")
 
-# Remaining code remains the same as before
-# Include the scrape_amazon_product, analyze_ingredients, and main functions as previously provided
+    # Extract product title
+    try:
+        title = soup.find("span", {"class": "VU-ZEz"}).text.strip()
+    except AttributeError:
+        title = None
 
-def scrape_amazon_product(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-    }
+    # Extract price
+    try:
+        price = soup.find("div", {"class": "Nx9bqj CxhGGd"}).text.strip()
+    except AttributeError:
+        price = None
 
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
+    # Extract image URL
+    try:
+        image_div = soup.find("div", {"class": "z1kiw8"})
+        image_url = image_div.find("img")["src"] if image_div else None
+    except AttributeError:
+        image_url = None
 
-        # Scrape product title
-        title_element = soup.select_one('#productTitle')
-        title = title_element.text.strip()
+    # Extract Ingredients
+    try:
+        description = soup.find("td", string="Ingredients").find_next_sibling("td").text.strip()
+        ingredients_website = [ingredient.strip() for ingredient in description.split(",")]
+    except AttributeError:
+        ingredients_website = []
 
-        # Scrape product rating
-        rating_element = soup.select_one('#acrPopover')
-        rating_text = rating_element.attrs.get('title')
-        rating = rating_text.replace('out of 5 stars', '')
+    return title, price, image_url, ingredients_website
 
-        # Scrape product price
-        price_element = soup.select_one('span.a-offscreen')
-        price = price_element.text.encode('utf-8').decode('utf-8')
+st.title("Flipkart Product Analyzer")
 
-        # Scrape product image
-        image_element = soup.select_one('#landingImage')
-        image = image_element.attrs.get('src')
+url = st.text_input("Enter the Flipkart product URL:")
 
-        # Scrape product description
-        description_element = soup.select_one('#productDescription')
-        description = description_element.text.strip()
+if st.button("Show All Details"):
+    if url:
+        title, price, image_url, ingredients_website = extract_product_info(url)
 
-        # Additional details (example: number of reviews)
-        reviews_element = soup.select_one('#acrCustomerReviewText')
-        if reviews_element:
-            reviews = reviews_element.text
+        if title and price and image_url:
+            st.subheader(title)
+            st.write(f"Price: {price}")
+            st.image(image_url)
         else:
-            reviews = "Not available"
+            st.write("Unable to extract product information. Please check the URL and try again.")
 
-        return {
-            "title": title,
-            "rating": rating,
-            "price": price,
-            "image": image,
-            "description": description,
-            "reviews": reviews
-        }
-    else:
-        return None
+    # Clear previous content
+    st.empty()
 
-def analyze_ingredients(product_description):
-    # Use Gemini API to analyze the ingredients
-    ingredients = gemini.analyze_ingredients(product_description)
+    # Insert your Gemini API key here
+    GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
 
-    # Identify harmful ingredients
-    harmful_ingredients = [ingredient for ingredient in ingredients if ingredient.is_harmful]
+    # Set up Google Gemini-Pro AI model
+    gen_ai.configure(api_key=GOOGLE_API_KEY)
+    model = gen_ai.GenerativeModel('gemini-pro')
 
-    # Generate recommendations
-    recommendations = gemini.generate_recommendations(harmful_ingredients)
+    # Initialize chat session in Streamlit if not already present
+    if "chat_session" not in st.session_state:
+        st.session_state.chat_session = model.start_chat(history=[])
+        
+    with st.expander("Ingredients"):
+        # Provide the merged ingredient list to Gemini for analysis
+        gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources. Merged ingredients: {ingredients_website}.")
+            
+            # Extract Gemini-generated ingredients
+        ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
+            
+            # Merge website-extracted and Gemini-generated ingredients, remove duplicates
+        merged_ingredients = list(set(ingredients_website + ingredients_gemini))
 
-    return harmful_ingredients, recommendations
-
-def main():
-    st.title("Ingredient Analyzer")
-
-    # User input for Amazon product URL
-    product_url = st.text_input("Enter the Amazon product URL:")
-
-    if st.button("Analyze"):
-        # Scrape product information from Amazon
-        product_info = scrape_amazon_product(product_url)
-
-        if product_info:
-            # Display product information
-            st.header(product_info["title"])
-            st.image(product_info["image"])
-            st.write(f"Rating: {product_info['rating']}")
-            st.write(f"Price: {product_info['price']}")
-            st.write(f"Reviews: {product_info['reviews']}")
-            st.write(product_info["description"])
-
-            # Analyze ingredients using Gemini
-            harmful_ingredients, recommendations = analyze_ingredients(product_info["description"])
-
-            # Display harmful ingredients and recommendations
-            if harmful_ingredients:
-                st.subheader("Harmful Ingredients:")
-                for ingredient in harmful_ingredients:
-                    st.write(ingredient.name)
-
-            st.subheader("Recommendations:")
-            for recommendation in recommendations:
-                st.write(recommendation)
-        else:
-            st.error("Error: Unable to retrieve product information.")
-
-if __name__ == "__main__":
-    main()
+            # Provide the merged ingredient list to Gemini for analysis
+        gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
+        st.markdown(gemini_final_response.text)
