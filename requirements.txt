@@ -1,2 +1,2 @@
+google.generativeai
 bs4
-gemini_api
