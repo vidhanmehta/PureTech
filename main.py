@@ -3,54 +3,44 @@ import requests
 from bs4 import BeautifulSoup
 
 def extract_product_info(url):
-    img_urls = []
     webpage = requests.get(url)
     soup = BeautifulSoup(webpage.content, "html.parser")
 
     # Extract product title
     try:
-        title = soup.find("h1").text.strip()
+        title = soup.find("span", {"class": "VU-ZEz"}).text.strip()
     except AttributeError:
         title = None
 
     # Extract price
     try:
-        price_div = soup.find("h4", {"data-test-id": "pdp-selling-price"})
-        if not price_div:
-            price_div = soup.find("h4", {"data-testid": "pdp-discounted-selling-price"})
-        price = price_div.text.strip() if price_div else None
+        price = soup.find("div", {"class": "Nx9bqj CxhGGd"}).text.strip()
     except AttributeError:
         price = None
 
-    # Extract image URLs
-    slider_wrapper_div = soup.find('div', id='slider-wrapper')
-    if slider_wrapper_div:
-        holder_div = slider_wrapper_div.find('div', id='holder')
-        if holder_div:
-            image_urls = [img['src'] for img in holder_div.find_all('img')]
-            img_urls.extend(image_urls)
-
-    # Extract description
+    # Extract image URL
     try:
-        description_div = soup.find("div", {"data-testid": "about-product-container"})
-        description = description_div.find("p").text.strip() if description_div else None
+        image_div = soup.find("div", {"class": "z1kiw8"})
+        image_url = image_div.find("img")["src"] if image_div else None
+    except AttributeError:
+        image_url = None
+
+    # Extract ingredients
+    try:
+        description = soup.find("td", text="Ingredients").find_next_sibling("td").text.strip()
     except AttributeError:
         description = None
+    
+    return title, price, image_url, description
 
-    return title, price, img_urls, description
+st.title('Flipkart Product Scraper')
 
-st.title('Zepto Product Scraper')
-
-url = st.text_input('Enter Zepto Product URL:')
+url = st.text_input('Enter Flipkart Product URL:')
 if url:
-    title, price, img_urls, description = extract_product_info(url)
+    title, price, image_url, description = extract_product_info(url)
 
     st.write(f"Product Title: {title}")
     st.write(f"Product Price: {price}")
-    
-    if img_urls:
-        st.write("Product Image URLs:")
-        for img_url in img_urls:
-            st.image(img_url, caption='Product Image', use_column_width=True)
-
-    st.write(f"Product Description: {description}")
+    if image_url:
+        st.image(image_url, caption='Product Image', use_column_width=True)
+    st.write(f"Ingredients: {description}")
