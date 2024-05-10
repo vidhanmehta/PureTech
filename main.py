@@ -70,8 +70,7 @@ if url:
                     st.markdown(final_response)
 
                     # Send harmful ingredients to Gemini for further analysis
-                    harmful_ingredients = []
-                    harmful_ingredients=st.session_state.chat_session.send_message(f"Identified harmful ingredients")
+                    harmful_ingredients = st.session_state.chat_session.send_message(f"Identified harmful ingredients")
 
             # Compute safety score and identify harmful ingredients
             safety_score = 100
@@ -79,8 +78,9 @@ if url:
                 safety_score -= 4  # Deduct four points for each harmful ingredient
             st.markdown(safety_score)
 
-            harmful_analysis=st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
+            harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
             st.markdown(harmful_analysis)
+
             # Prompt Gemini for product recommendation in the same category
             category_recommendation = st.session_state.chat_session.send_message("Please recommend a product in the same category that is better than the current product along with an Amazon link.")
 
@@ -89,3 +89,5 @@ if url:
             st.write(category_recommendation)
             st.write(reviews_summary)
 
+        else:
+            st.write(str(response.status_code) + ' - Error loading the page')
