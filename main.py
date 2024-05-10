@@ -82,4 +82,4 @@ if url:
         st.write(reviews_summary.text)
 
     else:
-            st.write(str(response.status_code) + ' - Error loading the page')
+            st.write('Error loading the page')
