@@ -1,43 +1,62 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+import random
+import time
 
-st.title('Amazon Product Scraper')
+# Define a list of user-agent strings
+user_agent_list = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+]
 
-url = st.text_input('Enter Amazon Product URL:')
+st.title('BigBasket Product Scraper')
+
+url = st.text_input('Enter BigBasket Product URL:')
 if url:
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-    }
-
+    # Send a GET request to the URL and get the HTML content
+    headers = {"User-Agent": random.choice(user_agent_list)}
     response = requests.get(url, headers=headers)
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
+    # Delay for a random time between 2 and 5 seconds
+    time.sleep(random.uniform(2, 5))
 
-        # Scrape product title
-        title_element = soup.select_one('#productTitle')
-        title = title_element.text.strip() if title_element else "Not found"
-        st.write(f"Product Title: {title}")
+    # Parse the HTML content using BeautifulSoup
+    soup = BeautifulSoup(response.content, "html.parser")
 
-        # Scrape product price
-        price_element = soup.select_one('span.a-offscreen')
-        price = price_element.text.encode('utf-8').decode('utf-8') if price_element else "Not found"
-        st.write(f"Product Price: {price}")
-
-        # Scrape product image
-        image_element = soup.select_one('#landingImage')
-        image = image_element.attrs.get('src') if image_element else "Not found"
-        st.image(image, caption='Product Image', use_column_width=True)
-
-        # Scrape product ingredients
-        ingredients_element = soup.find('div', {'id': 'important-information'})
-        if ingredients_element and ingredients_element.find('h4', string='Ingredients:'):
-            ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
-            ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
-            st.write(f"Product Ingredients: {ingredients_list}")
-        else:
-            st.write("Product Ingredients: Not available")
-
+    # Extract the product title
+    title_element = soup.find("h1", class_="Description___StyledH-sc-82a36a-2 bofYPK")
+    if title_element:
+        title = title_element.text.strip()
     else:
-        st.write(str(response.status_code) + ' - Error loading the page')
+        title = None
+
+    # Extract the product price
+    price_element = soup.find("td", class_="Description___StyledTd-sc-82a36a-4 fLZywG")
+    if price_element:
+        price_text = price_element.text.strip()
+        try:
+            price = price_text.split(":")[1].strip()
+        except IndexError:
+            price = None
+    else:
+        price = None
+
+    # Extract the product image URL
+    image_div = soup.find("div", class_="sticky self-start")
+    if image_div:
+        image_element = image_div.find("img")
+        if image_element:
+            image_url = image_element["src"]
+        else:
+            image_url = None
+    else:
+        image_url = None
+
+    # Display the extracted data using Streamlit
+    st.write(f"Title: {title}")
+    st.write(f"Price: {price}")
+    if image_url:
+        st.image(image_url, caption='Product Image', use_column_width=True)
