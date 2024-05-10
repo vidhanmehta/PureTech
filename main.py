@@ -56,7 +56,7 @@ if url:
 
             with st.expander("Ingredients"):
                 # Provide the merged ingredient list to Gemini for analysis
-                gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources. Merged ingredients: {ingredients_list}.")
+                gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
 
                 if gemini_response.parts:
                     # Extract Gemini-generated ingredients
@@ -65,30 +65,27 @@ if url:
                     # Merge website-extracted and Gemini-generated ingredients, remove duplicates
                     merged_ingredients = list(set(ingredients_list + ingredients_gemini))
 
-                    # Compute safety score and identify harmful ingredients
-                    safety_score = 100
-                    harmful_ingredients = []
-                    for ingredient in merged_ingredients:
-                        if "harmful" in ingredient.lower():
-                            harmful_ingredients.append(ingredient)
-                            safety_score -= 4  # Deduct four points for each harmful ingredient
-
                     # Provide the final response to Gemini
-                    final_response = f"Here is the merged ingredient list: {merged_ingredients}. Safety Score: {safety_score}."
+                    final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients} please provide the final ingredient list and analyze the ingredients as safe and harmful indiactedby green tick and red cross respectively. ")
                     st.markdown(final_response)
 
                     # Send harmful ingredients to Gemini for further analysis
-                    if harmful_ingredients:
-                        st.session_state.chat_session.send_message(f"Identified harmful ingredients: {harmful_ingredients}")
+                    harmful_ingredients = []
+                    harmful_ingredients=st.session_state.chat_session.send_message(f"Identified harmful ingredients")
 
-                    # Prompt Gemini for product recommendation in the same category
-                    category_recommendation = st.session_state.chat_session.send_message("Please recommend a product in the same category that is better than the current product along with an Amazon link.")
+            # Compute safety score and identify harmful ingredients
+            safety_score = 100
+            for i in range (0,len(harmful_ingredients)):
+                safety_score -= 4  # Deduct four points for each harmful ingredient
+            st.markdown(safety_score)
 
-                    # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
-                    reviews_summary = st.session_state.chat_session.send_message("Please analyze the top 5 customer reviews and provide an overall summary.")
+            harmful_analysis=st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
+            st.markdown(harmful_analysis)
+            # Prompt Gemini for product recommendation in the same category
+            category_recommendation = st.session_state.chat_session.send_message("Please recommend a product in the same category that is better than the current product along with an Amazon link.")
 
-                    st.write("Gemini is analyzing your request. Please wait for the response.")
-                else:
-                    st.write("No response from Gemini. Please try again.")
-        else:
-            st.write(str(response.status_code) + ' - Error loading the page')
+            # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
+            reviews_summary = st.session_state.chat_session.send_message("Please analyze the top 5 customer reviews and provide an overall summary.")
+            st.write(category_recommendation)
+            st.write(reviews_summary)
+
