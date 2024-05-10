@@ -67,7 +67,7 @@ if url:
                 harmful_response = st.session_state.chat_session.send_message(f"Give the number of harmful ingredients in {final_response}")
 
             # Compute safety score and identify harmful ingredients
-            safety_score = 100 - 4 * harmful_response.text
+            safety_score = 100 - 4 * int(harmful_response.text)
         st.markdown(f"Safety Score: {safety_score}")
 
         harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
@@ -80,3 +80,6 @@ if url:
         reviews_summary = st.session_state.chat_session.send_message("Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary.")
         st.write(category_recommendation.text)
         st.write(reviews_summary.text)
+
+    else:
+            st.write(str(response.status_code) + ' - Error loading the page')
