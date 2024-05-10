@@ -65,9 +65,9 @@ if url:
 
                 # Send harmful ingredients to Gemini for further analysis
                 harmful_response = st.session_state.chat_session.send_message(f"Give only the number of harmful ingredients in {final_response} only the number nothing else just a number")
-
+                hi=int(harmful_response.text)
             # Compute safety score and identify harmful ingredients
-            safety_score = 100 - 4 * int(harmful_response.text)
+            safety_score = 100 - 4 * hi
         st.markdown(f"Safety Score: {safety_score}")
 
         harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
