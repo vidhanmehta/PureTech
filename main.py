@@ -11,19 +11,19 @@ def extract_product_info(url):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # Extract product title
-    title_element = soup.find('span', {'class': '_35KyD6'})
+    title_element = soup.find("span", {"class": "VU-ZEz"})
     title = title_element.text.strip() if title_element else "Not found"
 
     # Extract product price
-    price_element = soup.find('div', {'class': '_1vC4OE _3qQ9m1'})
+    price_element = soup.find("div", {"class": "Nx9bqj CxhGGd"})
     price = price_element.text.strip() if price_element else "Not found"
 
     # Extract product image
-    image_element = soup.find('div', {'class': '_2_AcLJ'})
+    image_element = soup.find("div", {"class": "z1kiw8"})
     image = image_element.find('img')['src'] if image_element else "Not found"
 
     # Extract product description
-    description_element = soup.find('div', {'class': '_3WHvuP'})
+    description_element = soup.find("td", string="Ingredients").find_next_sibling("td")
     description = description_element.text.strip() if description_element else "Not found"
 
     return title, price, image, description
