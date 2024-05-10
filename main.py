@@ -80,6 +80,3 @@ if url:
         reviews_summary = st.session_state.chat_session.send_message("Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary.")
         st.write(category_recommendation.text)
         st.write(reviews_summary.text)
-
-    else:
-            st.write('Error loading the page')
