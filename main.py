@@ -67,7 +67,7 @@ if url:
                 harmful_response = st.session_state.chat_session.send_message(f"Give the number of harmful ingredients in {final_response}")
 
             # Compute safety score and identify harmful ingredients
-            safety_score = 100 - 4 * harmful_response
+            safety_score = 100 - 4 * harmful_response.text
         st.markdown(f"Safety Score: {safety_score}")
 
         harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
