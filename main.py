@@ -41,6 +41,7 @@ url = st.text_input("Enter the Flipkart product URL:")
 
 if st.button("Show All Details"):
     if url:
+        st.write(url)
         title, price, image_url, ingredients_website = extract_product_info(url)
 
         if title and price and image_url:
