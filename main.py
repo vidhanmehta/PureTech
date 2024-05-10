@@ -65,7 +65,7 @@ if url:
         ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
             
             # Merge website-extracted and Gemini-generated ingredients, remove duplicates
-        merged_ingredients = list(set(ingredients_website + ingredients_gemini))
+        merged_ingredients = list(set(ingredients_list + ingredients_gemini))
 
             # Provide the merged ingredient list to Gemini for analysis
         gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
