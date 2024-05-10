@@ -60,7 +60,7 @@ if url:
                 gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
 
                 # Provide the final response to Gemini
-                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested in website {ingredient_list} and these are the AI generated ingredient list {gemini_response} please provide the final ingredient list and analyze the ingredients as safe and harmful indiacted by green tick and red cross respectively. ")
+                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested in website {ingredients_list} and these are the AI generated ingredient list {gemini_response} please provide the final ingredient list and analyze the ingredients as safe and harmful indiacted by green tick and red cross respectively. ")
                 st.markdown(final_response.text)
 
                 # Send harmful ingredients to Gemini for further analysis
