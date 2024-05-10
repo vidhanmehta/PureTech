@@ -36,9 +36,7 @@ if url:
         if ingredients_element and ingredients_element.find('h4', string='Ingredients:'):
             ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
             ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
-            st.write(f"Product Ingredients: {ingredients_list}")
-        else:
-            st.write("Product Ingredients: Not available")
+            
 
         # Clear previous content
         st.empty()
