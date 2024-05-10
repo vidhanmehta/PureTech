@@ -3,11 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 import google.generativeai as gen_ai
 
-st.title('Ingredient Assist - Made by Sumith, Vidhan, Swathi, and Venkat')
+st.title('Ingredient Assist')
+st.markdown('- Made by Sumith, Vidhan, Swathi, and Venkat')
 
 url = st.text_input('Enter Amazon Product URL:')
 if url:
-    button_clicked = st.button('Your Health in a Click for Analysis')
+    button_clicked = st.button('Your Health in a Click')
 
     if button_clicked:
         headers = {
@@ -70,13 +71,19 @@ if url:
                     st.markdown(final_response)
 
                     # Send harmful ingredients to Gemini for further analysis
-                    harmful_ingredients = st.session_state.chat_session.send_message(f"Identified harmful ingredients")
+                    harmful_response = st.session_state.chat_session.send_message(f"Identified harmful ingredients")
+                    if harmful_response.parts:
+                        harmful_ingredients_text = harmful_response.parts[0].text
+                    else:
+                        harmful_ingredients_text = ""
 
-            
-            safety_score = 100 - 4 * harmful_ingredients.count("\n")
+            # Compute safety score and identify harmful ingredients
+            safety_score = 100 - 4 * harmful_ingredients_text.count("\n")
             st.markdown(f"Safety Score: {safety_score}")
-            harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
-            st.markdown(harmful_analysis)
+
+            # Display harmful ingredients and their effects
+            st.write("### Harmful Ingredients and Effects")
+            # You can format the harmful ingredients and their effects into a table here
 
             # Prompt Gemini for product recommendation in the same category
             category_recommendation = st.session_state.chat_session.send_message("Please recommend a product in the same category that is better than the current product along with an Amazon link.")
