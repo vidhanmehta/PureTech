@@ -23,7 +23,7 @@ def extract_product_info(url):
     image = image_element.find('img')['src'] if image_element else "Not found"
 
     # Extract product description
-    description_element = soup.find("td", string="Ingredients").find_next_sibling("td")
+    description_element = soup.find("td", {"class": "HPETK2"})
     description = description_element.text.strip() if description_element else "Not found"
 
     return title, price, image, description
