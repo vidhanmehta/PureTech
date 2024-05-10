@@ -3,8 +3,7 @@ from bs4 import BeautifulSoup
 import streamlit as st
 
 def extract_product_info(url):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-    webpage = requests.get(url, headers=headers)
+    webpage = requests.get(url)
     soup = BeautifulSoup(webpage.content, "html.parser")
 
     # Extract product title
@@ -41,7 +40,6 @@ url = st.text_input("Enter the Flipkart product URL:")
 
 if st.button("Show All Details"):
     if url:
-        st.write(url)
         title, price, image_url, ingredients_website = extract_product_info(url)
 
         if title and price and image_url:
@@ -50,3 +48,6 @@ if st.button("Show All Details"):
             st.image(image_url)
         else:
             st.write("Unable to extract product information. Please check the URL and try again.")
+
+    # Clear previous content
+    st.empty()
