@@ -73,10 +73,10 @@ if url:
             st.markdown(harmful_analysis.text)
 
             # Prompt Gemini for product recommendation in the same category
-            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link.")
+            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link keep the content precise and short to the point do not brief.")
 
             # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
-            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary.")
+            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary keep it super short not exceeding more than four lines.")
             st.write(category_recommendation.text)
             st.write(reviews_summary.text)
 
