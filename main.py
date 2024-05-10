@@ -28,7 +28,7 @@ if url:
         # Scrape product image
         image_element = soup.select_one('#landingImage')
         image = image_element.attrs.get('src') if image_element else "Not found"
-        st.image(image, caption='Product Image', use_column_width=True)
+        st.image(image, caption='Product Image')
 
         # Scrape product ingredients
         ingredients_element = soup.find('div', {'id': 'important-information'})
