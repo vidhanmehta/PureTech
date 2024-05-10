@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import streamlit as st
 
-def extract_product_info(url, user_agent):
+def extract_product_info(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
     }
@@ -40,10 +40,9 @@ def extract_product_info(url, user_agent):
 def main():
     st.title("Product Information Extractor")
     url = st.text_input("Enter Product URL:")
-    user_agent = st.text_input("Enter User-Agent:")
     if st.button("Extract"):
         if url:
-            title, price, image_url, description = extract_product_info(url, user_agent)
+            title, price, image_url, description = extract_product_info(url)
             st.write("Title:", title)
             st.write("Price:", price)
             st.write("Image URL:", image_url)
