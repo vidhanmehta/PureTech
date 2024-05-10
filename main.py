@@ -66,7 +66,7 @@ if url:
                 merged_ingredients = list(set(ingredients_list + ingredients_gemini))
 
                 # Provide the merged ingredient list to Gemini for analysis
-                gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
+                gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a green tick emoji next to safe ingredients and a red cross next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
                 st.markdown(gemini_final_response.text)
             else:
                 st.write("No response from Gemini. Please try again.")
