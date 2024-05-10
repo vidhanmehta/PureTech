@@ -1,6 +1,6 @@
+import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import streamlit as st
 
 def extract_product_info(url):
     headers = {
@@ -8,53 +8,33 @@ def extract_product_info(url):
     }
 
     response = requests.get(url, headers=headers)
-    soup = None
-
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response.text, 'html.parser')
 
     # Extract product title
-    try:
-        title = soup.find("span", {"class": "VU-ZEz"}).text.strip()
-    except (AttributeError, TypeError):
-        title = None
+    title_element = soup.find('span', {'class': '_35KyD6'})
+    title = title_element.text.strip() if title_element else "Not found"
 
-    # Extract price
-    try:
-        price = soup.find("div", {"class": "Nx9bqj CxhGGd"}).text.strip()
-    except (AttributeError, TypeError):
-        price = None
+    # Extract product price
+    price_element = soup.find('div', {'class': '_1vC4OE _3qQ9m1'})
+    price = price_element.text.strip() if price_element else "Not found"
 
-    # Extract image URL
-    try:
-        image_div = soup.find("div", {"class": "z1kiw8"})
-        image_url = image_div.find("img")["src"] if image_div else None
-    except (AttributeError, TypeError):
-        image_url = None
+    # Extract product image
+    image_element = soup.find('div', {'class': '_2_AcLJ'})
+    image = image_element.find('img')['src'] if image_element else "Not found"
 
-    # Extract Ingredients
-    try:
-        description = soup.find("td", string="Ingredients").find_next_sibling("td").text.strip()
-        ingredients_website = [ingredient.strip() for ingredient in description.split(",")]
-    except (AttributeError, TypeError):
-        ingredients_website = []
+    # Extract product description
+    description_element = soup.find('div', {'class': '_3WHvuP'})
+    description = description_element.text.strip() if description_element else "Not found"
 
-    return title, price, image_url, ingredients_website
+    return title, price, image, description
 
-st.title("Flipkart Product Analyzer")
+st.title('Flipkart Product Scraper')
 
-url = st.text_input("Enter the Flipkart product URL:")
+url = st.text_input('Enter Flipkart Product URL:')
+if url:
+    title, price, image, description = extract_product_info(url)
 
-if st.button("Show All Details"):
-    if url:
-        title, price, image_url, ingredients_website = extract_product_info(url)
-
-        if title and price and image_url:
-            st.subheader(title)
-            st.write(f"Price: {price}")
-            st.image(image_url)
-        else:
-            st.write("Unable to extract product information. Please check the URL and try again.")
-
-    # Clear previous content
-    st.empty()
+    st.write(f"Product Title: {title}")
+    st.write(f"Product Price: {price}")
+    st.image(image, caption='Product Image', use_column_width=True)
+    st.write(f"Product Description: {description}")
