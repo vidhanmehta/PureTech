@@ -40,33 +40,35 @@ if url:
         else:
             st.write("Product Ingredients: Not available")
 
+        # Clear previous content
+        st.empty()
+
+        # Insert your Gemini API key here
+        GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
+
+        # Set up Google Gemini-Pro AI model
+        gen_ai.configure(api_key=GOOGLE_API_KEY)
+        model = gen_ai.GenerativeModel('gemini-pro')
+
+        # Initialize chat session in Streamlit if not already present
+        if "chat_session" not in st.session_state:
+            st.session_state.chat_session = model.start_chat(history=[])
+
+        with st.expander("Ingredients"):
+            # Provide the merged ingredient list to Gemini for analysis
+            gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources. Merged ingredients: {ingredients_list}.")
+            
+            if gemini_response.parts:
+                # Extract Gemini-generated ingredients
+                ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
+                
+                # Merge website-extracted and Gemini-generated ingredients, remove duplicates
+                merged_ingredients = list(set(ingredients_list + ingredients_gemini))
+
+                # Provide the merged ingredient list to Gemini for analysis
+                gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
+                st.markdown(gemini_final_response.text)
+            else:
+                st.write("No response from Gemini. Please try again.")
     else:
         st.write(str(response.status_code) + ' - Error loading the page')
-
-    # Clear previous content
-    st.empty()
-
-    # Insert your Gemini API key here
-    GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
-
-    # Set up Google Gemini-Pro AI model
-    gen_ai.configure(api_key=GOOGLE_API_KEY)
-    model = gen_ai.GenerativeModel('gemini-pro')
-
-    # Initialize chat session in Streamlit if not already present
-    if "chat_session" not in st.session_state:
-        st.session_state.chat_session = model.start_chat(history=[])
-        
-    with st.expander("Ingredients"):
-        # Provide the merged ingredient list to Gemini for analysis
-        gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources. Merged ingredients: {ingredients_website}.")
-            
-            # Extract Gemini-generated ingredients
-        ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
-            
-            # Merge website-extracted and Gemini-generated ingredients, remove duplicates
-        merged_ingredients = list(set(ingredients_list + ingredients_gemini))
-
-            # Provide the merged ingredient list to Gemini for analysis
-        gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
-        st.markdown(gemini_final_response.text)
