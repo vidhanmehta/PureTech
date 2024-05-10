@@ -3,12 +3,12 @@ from bs4 import BeautifulSoup
 import streamlit as st
 
 def extract_product_info(url):
-    if url:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-        }
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
+    }
 
     response = requests.get(url, headers=headers)
+    soup = None
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -16,27 +16,27 @@ def extract_product_info(url):
     # Extract product title
     try:
         title = soup.find("span", {"class": "VU-ZEz"}).text.strip()
-    except AttributeError:
+    except (AttributeError, TypeError):
         title = None
 
     # Extract price
     try:
         price = soup.find("div", {"class": "Nx9bqj CxhGGd"}).text.strip()
-    except AttributeError:
+    except (AttributeError, TypeError):
         price = None
 
     # Extract image URL
     try:
         image_div = soup.find("div", {"class": "z1kiw8"})
         image_url = image_div.find("img")["src"] if image_div else None
-    except AttributeError:
+    except (AttributeError, TypeError):
         image_url = None
 
     # Extract Ingredients
     try:
         description = soup.find("td", string="Ingredients").find_next_sibling("td").text.strip()
         ingredients_website = [ingredient.strip() for ingredient in description.split(",")]
-    except AttributeError:
+    except (AttributeError, TypeError):
         ingredients_website = []
 
     return title, price, image_url, ingredients_website
