@@ -1,40 +1,55 @@
-import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+import streamlit as st
 
-def extract_product_info(url):
+def extract_product_info(url, user_agent):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
     }
-
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
+    webpage = requests.get(url, headers=headers)
+    soup = BeautifulSoup(webpage.content, "html.parser")
 
     # Extract product title
-    title_element = soup.find("span", {"class": "VU-ZEz"})
-    title = title_element.text.strip() if title_element else "Not found"
+    try:
+        title = soup.find("span", {"class": "B_NuCI"}).text.strip()
+    except AttributeError:
+        title = None
 
-    # Extract product price
-    price_element = soup.find("div", {"class": "Nx9bqj CxhGGd"})
-    price = price_element.text.strip() if price_element else "Not found"
+    # Extract price
+    try:
+        price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).text.strip()
+    except AttributeError:
+        price = None
 
-    # Extract product image
-    image_element = soup.find("div", {"class": "z1kiw8"})
-    image = image_element.find('img')['src'] if image_element else "Not found"
+    # Extract image URL
+    try:
+        image_div = soup.find("div", {"class": "_2_AcLJ"})
+        image_url = image_div.find("img")["src"] if image_div else None
+    except AttributeError:
+        image_url = None
 
-    # Extract product description
-    description_element = soup.find("td", {"class": "HPETK2"})
-    description = description_element.text.strip() if description_element else "Not found"
+    # Extract Ingredients
+    try:
+        description = soup.find("div", {"class": "_1AtVbE"}).text.strip()
+    except AttributeError:
+        description = None
+    
+    return title, price, image_url, description
 
-    return title, price, image, description
+# Streamlit app
+def main():
+    st.title("Product Information Extractor")
+    url = st.text_input("Enter Product URL:")
+    user_agent = st.text_input("Enter User-Agent:")
+    if st.button("Extract"):
+        if url:
+            title, price, image_url, description = extract_product_info(url, user_agent)
+            st.write("Title:", title)
+            st.write("Price:", price)
+            st.write("Image URL:", image_url)
+            st.write("Ingredients:", description)
+        else:
+            st.warning("Please enter a URL.")
 
-st.title('Flipkart Product Scraper')
-
-url = st.text_input('Enter Flipkart Product URL:')
-if url:
-    title, price, image, description = extract_product_info(url)
-
-    st.write(f"Product Title: {title}")
-    st.write(f"Product Price: {price}")
-    st.image(image, caption='Product Image', use_column_width=True)
-    st.write(f"Product Description: {description}")
+if __name__ == "__main__":
+    main()
