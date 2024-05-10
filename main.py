@@ -1,54 +1,56 @@
+import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import streamlit as st
 
 def extract_product_info(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-    }
-    webpage = requests.get(url, headers=headers)
+    img_urls = []
+    webpage = requests.get(url)
     soup = BeautifulSoup(webpage.content, "html.parser")
 
     # Extract product title
     try:
-        title = soup.find("span", {"class": "B_NuCI"}).text.strip()
+        title = soup.find("h1").text.strip()
     except AttributeError:
         title = None
 
     # Extract price
     try:
-        price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).text.strip()
+        price_div = soup.find("h4", {"data-test-id": "pdp-selling-price"})
+        if not price_div:
+            price_div = soup.find("h4", {"data-testid": "pdp-discounted-selling-price"})
+        price = price_div.text.strip() if price_div else None
     except AttributeError:
         price = None
 
-    # Extract image URL
-    try:
-        image_div = soup.find("div", {"class": "_2_AcLJ"})
-        image_url = image_div.find("img")["src"] if image_div else None
-    except AttributeError:
-        image_url = None
+    # Extract image URLs
+    slider_wrapper_div = soup.find('div', id='slider-wrapper')
+    if slider_wrapper_div:
+        holder_div = slider_wrapper_div.find('div', id='holder')
+        if holder_div:
+            image_urls = [img['src'] for img in holder_div.find_all('img')]
+            img_urls.extend(image_urls)
 
-    # Extract Ingredients
+    # Extract description
     try:
-        description = soup.find("div", {"class": "_1AtVbE"}).text.strip()
+        description_div = soup.find("div", {"data-testid": "about-product-container"})
+        description = description_div.find("p").text.strip() if description_div else None
     except AttributeError:
         description = None
+
+    return title, price, img_urls, description
+
+st.title('Zepto Product Scraper')
+
+url = st.text_input('Enter Zepto Product URL:')
+if url:
+    title, price, img_urls, description = extract_product_info(url)
+
+    st.write(f"Product Title: {title}")
+    st.write(f"Product Price: {price}")
     
-    return title, price, image_url, description
+    if img_urls:
+        st.write("Product Image URLs:")
+        for img_url in img_urls:
+            st.image(img_url, caption='Product Image', use_column_width=True)
 
-# Streamlit app
-def main():
-    st.title("Product Information Extractor")
-    url = st.text_input("Enter Product URL:")
-    if st.button("Extract"):
-        if url:
-            title, price, image_url, description = extract_product_info(url)
-            st.write("Title:", title)
-            st.write("Price:", price)
-            st.write("Image URL:", image_url)
-            st.write("Ingredients:", description)
-        else:
-            st.warning("Please enter a URL.")
-
-if __name__ == "__main__":
-    main()
+    st.write(f"Product Description: {description}")
