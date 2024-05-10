@@ -64,16 +64,24 @@ if url:
                 st.markdown(final_response.text)
 
                 # Send harmful ingredients to Gemini for further analysis
-                safety_score = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in {final_response} and compute the safety_score = 100 - 4 * number of harmful ingredients and return the safety score as a number only")
-                st.markdown(safety_score.text)
+                safety_score_response = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in {final_response} and compute the safety_score = 100 - 4 * number of harmful ingredients and return the safety score as a number only")
 
-        harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
-        st.markdown(harmful_analysis.text)
+            # Extract safety score from response
+            safety_score = 0
+            if safety_score_response.done:
+                safety_score = int(safety_score_response.result)
+            st.markdown(f"Safety Score: {safety_score}")
 
-        # Prompt Gemini for product recommendation in the same category
-        category_recommendation = st.session_state.chat_session.send_message("Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link.")
+            harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
+            st.markdown(harmful_analysis.text)
 
-        # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
-        reviews_summary = st.session_state.chat_session.send_message("Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary.")
-        st.write(category_recommendation.text)
-        st.write(reviews_summary.text)
+            # Prompt Gemini for product recommendation in the same category
+            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link.")
+
+            # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
+            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary.")
+            st.write(category_recommendation.text)
+            st.write(reviews_summary.text)
+
+        else:
+            st.write(str(response.status_code) + ' - Error loading the page')
