@@ -59,26 +59,15 @@ if url:
                 # Provide the merged ingredient list to Gemini for analysis
                 gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
 
-                if gemini_response.parts:
-                    # Extract Gemini-generated ingredients
-                    ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
+                # Provide the final response to Gemini
+                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested in website {ingredient_list} and these are the AI generated ingredient list {gemini_response} please provide the final ingredient list and analyze the ingredients as safe and harmful indiacted by green tick and red cross respectively. ")
+                st.markdown(final_response.text)
 
-                    # Merge website-extracted and Gemini-generated ingredients, remove duplicates
-                    merged_ingredients = list(set(ingredients_list + ingredients_gemini))
-
-                    # Provide the final response to Gemini
-                    final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients} please provide the final ingredient list and analyze the ingredients as safe and harmful indiactedby green tick and red cross respectively. ")
-                    st.markdown(final_response.text)
-
-                    # Send harmful ingredients to Gemini for further analysis
-                    harmful_response = st.session_state.chat_session.send_message(f"Identified harmful ingredients")
-                    if harmful_response.parts:
-                        harmful_ingredients_text = harmful_response.parts[0].text
-                    else:
-                        harmful_ingredients_text = ""
+                # Send harmful ingredients to Gemini for further analysis
+                harmful_response = st.session_state.chat_session.send_message(f"Give the number of harmful ingredients in {final_response}")
 
             # Compute safety score and identify harmful ingredients
-            safety_score = 100 - 4 * harmful_ingredients_text.count("\n")
+            safety_score = 100 - 4 * harmful_response
         st.markdown(f"Safety Score: {safety_score}")
 
         harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
