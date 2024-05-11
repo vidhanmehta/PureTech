@@ -2,8 +2,6 @@
 
 # PureTech Product Analyzer
 
-![PureTech Logo](https://your-image-url.com)
-
 PureTech Product Analyzer is a Streamlit web application that allows users to analyze product details, safety scores, harmful ingredients, category recommendations, and customer reviews for various products from different e-commerce websites.
 
 ## Features
