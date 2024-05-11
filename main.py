@@ -41,7 +41,7 @@ if url:
                 ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
                 ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
             else:
-                ingredients_list = "Not available"
+                ingredients_list="None"
 
             # Clear previous content
             st.empty()
@@ -62,23 +62,23 @@ if url:
                 gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
 
                 # Provide the final response to Gemini
-                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested on the website: {ingredients_list}.\nAI-generated ingredient list: {gemini_response}.\nPlease provide the final ingredient list and analyze the ingredients as safe and harmful indicated by green tick and red cross respectively.")
+                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested in website {ingredients_list} and these are the AI generated ingredient list {gemini_response} please provide the final ingredient list and analyze the ingredients as safe and harmful indiacted by green tick and red cross respectively. Be a little harsh on selecting the harmful ingredients with valid reasoning")
                 st.markdown(final_response.text)
 
                 # Send harmful ingredients to Gemini for further analysis
-                safety_score_response = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in the final ingredient list provided and compute the safety_score = 100 - 4 * number of harmful ingredients. Return the safety score as a number only.")
+                safety_score_response = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in {final_response} and compute the safety_score = 100 - 4 * number of harmful ingredients and return the safety score as a number only")
 
-            safety_score = int(safety_score_response.text)
-            st.markdown(f"Safety Score: {safety_score}")
+            
+            st.markdown(f"Safety Score: {safety_score_response.text}")
 
-            harmful_analysis = st.session_state.chat_session.send_message("In a table format, provide the harmful ingredients and their effects in another column. Keep the effects very short and precise.")
+            harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
             st.markdown(harmful_analysis.text)
 
             # Prompt Gemini for product recommendation in the same category
-            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a better product in the same category as {title} along with an Amazon link. Keep the content precise and to the point.")
+            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link keep the content precise and short to the point do not brief.")
 
             # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
-            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} available at {url} and provide an overall summary. Keep it super short, not exceeding more than four lines.")
+            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary keep it super short not exceeding more than four lines.")
             st.write(category_recommendation.text)
             st.write(reviews_summary.text)
 
