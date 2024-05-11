@@ -70,7 +70,6 @@ if url:
                 if st.button('Your Health in a Click'):
                     with st.expander("Ingredients"):
                         gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
-                        st.markdown(gemini_response.text)
                         ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
                         merged_ingredients = list(set(ingredients_list + ingredients_gemini))
                         gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
