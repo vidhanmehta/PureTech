@@ -1,37 +1,37 @@
 import requests
 from bs4 import BeautifulSoup
-import random
-
-# Define a list of user-agent strings
-user_agent_list = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-]
 
 def extract_amazon_product_info(url):
-    webpage = requests.get(url, headers={'User-Agent': random.choice(user_agent_list)})
-    soup = BeautifulSoup(webpage.content, "html.parser")
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
+    }
 
-    # Extract product title
-    title_element = soup.find("span", {"id": "productTitle"})
-    title = title_element.get_text(strip=True) if title_element else None
+    response = requests.get(url, headers=headers)
 
-    # Extract price
-    price_element = soup.find("span", {"class": "a-offscreen"})
-    price = price_element.get_text(strip=True) if price_element else None
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Extract image URL
-    image_element = soup.find("img", {"id": "landingImage"})
-    image_url = image_element["src"] if image_element else None
+        # Scrape product title
+        title_element = soup.select_one('#productTitle')
+        title = title_element.text.strip() if title_element else "Not found"
 
-    # Extract Ingredients
-    ingredients_element = soup.find('div', {'id': 'important-information'})
-    if ingredients_element and ingredients_element.find('h4', string='Ingredients:'):
-        ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
-        ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
+        # Scrape product price
+        price_element = soup.select_one('span.a-offscreen')
+        price = price_element.text.encode('utf-8').decode('utf-8') if price_element else "Not found"
+
+        # Scrape product image
+        image_element = soup.select_one('#landingImage')
+        image = image_element.attrs.get('src') if image_element else "Not found"
+
+        # Scrape product ingredients
+        ingredients_element = soup.find('div', {'id': 'important-information'})
+        if ingredients_element and ingredients_element.find('h4', string='Ingredients:'):
+            ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
+            ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
+        else:
+            ingredients_list = []
+
+        return title, price, image, ingredients_list
+
     else:
-        ingredients_list = []
-
-    return title, price, image_url, ingredients_list
+        return None, None, None, None
