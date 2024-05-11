@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import random
 import time
 import google.generativeai as gen_ai
+from streamlit import secrets
 
 # Importing custom scraping functions
 from amazon import extract_amazon_product_info
@@ -54,10 +55,9 @@ if url:
                 st.write(f"Price: {price}")
                 if image_url and website_name.lower() != 'bigbasket':  # Exclude image display for BigBasket
                     st.image(image_url, caption='Product Image')
-           
-
-                # Insert your Gemini API key here
-                GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
+                
+                # Get the API key from secrets
+                GOOGLE_API_KEY = st.secrets['GOOGLE_API_KEY']
 
                 # Set up Google Gemini-Pro AI model
                 gen_ai.configure(api_key=GOOGLE_API_KEY)
@@ -90,7 +90,7 @@ if url:
                 st.error("Unable to extract product information. Please check the URL and try again.")
 
         except Exception as e:
-            st.error(f"An error occurred:  please retry")
+            st.error(f"An error occurred: {e}. Please retry.")
 
     else:
         st.error("Invalid URL. Please enter a valid product URL.")
