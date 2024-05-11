@@ -1,86 +1,96 @@
-import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+import streamlit as st
 import google.generativeai as gen_ai
 
-st.title('Ingredient Assist')
-st.markdown('- Made by Sumith, Vidhan, Swathi, and Venkat')
+def extract_product_info(url):
+    webpage = requests.get(url)
+    soup = BeautifulSoup(webpage.content, "html.parser")
 
-url = st.text_input('Enter Amazon Product URL:')
-if url:
-    button_clicked = st.button('Your Health in a Click')
+    # Extract product title
+    try:
+        title = soup.find("span", {"class": "VU-ZEz"}).text.strip()
+    except AttributeError:
+        title = None
 
-    if button_clicked:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-        }
+    # Extract price
+    try:
+        price = soup.find("div", {"class": "Nx9bqj CxhGGd"}).text.strip()
+    except AttributeError:
+        price = None
 
-        response = requests.get(url, headers=headers)
+    # Extract image URL
+    try:
+        image_div = soup.find("div", {"class": "z1kiw8"})
+        image_url = image_div.find("img")["src"] if image_div else None
+    except AttributeError:
+        image_url = None
 
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
+    # Extract Ingredients
+    try:
+        description = soup.find("td", string="Ingredients").find_next_sibling("td").text.strip()
+        ingredients_website = [ingredient.strip() for ingredient in description.split(",")]
+    except AttributeError:
+        ingredients_website = []
 
-            # Scrape product title
-            title_element = soup.select_one('#productTitle')
-            title = title_element.text.strip() if title_element else "Not found"
-            st.write(f"Product Title: {title}")
+    return title, price, image_url, ingredients_website
 
-            # Scrape product price
-            price_element = soup.select_one('span.a-offscreen')
-            price = price_element.text.encode('utf-8').decode('utf-8') if price_element else "Not found"
-            st.write(f"Product Price: {price}")
+st.title("Flipkart Product Analyzer")
 
-            # Scrape product image
-            image_element = soup.select_one('#landingImage')
-            image = image_element.attrs.get('src') if image_element else "Not found"
-            st.image(image, caption='Product Image')
+url = st.text_input("Enter the Flipkart product URL:")
 
-            # Scrape product ingredients
-            ingredients_element = soup.find('div', {'id': 'important-information'})
-            if ingredients_element and ingredients_element.find('h4', string='Ingredients:'):
-                ingredients_text = ingredients_element.find('h4', string='Ingredients:').find_next('p').text.strip()
-                ingredients_list = [ingredient.strip() for ingredient in ingredients_text.split(',')]
-            else:
-                ingredients_list="None"
+if st.button("Show All Details"):
+    if url:
+        title, price, image_url, ingredients_website = extract_product_info(url)
 
-            # Clear previous content
-            st.empty()
+        if title and price and image_url:
+            st.subheader(title)
+            st.write(f"Price: {price}")
+            st.image(image_url)
+        else:
+            st.write("Unable to extract product information. Please check the URL and try again.")
 
-            # Insert your Gemini API key here
-            GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
+    # Clear previous content
+    st.empty()
 
-            # Set up Google Gemini-Pro AI model
-            gen_ai.configure(api_key=GOOGLE_API_KEY)
-            model = gen_ai.GenerativeModel('gemini-pro')
+    # Insert your Gemini API key here
+    GOOGLE_API_KEY = "AIzaSyCMgUr_fxj9Sqoz9afpep-J6ZyQeEnu59c"
 
-            # Initialize chat session in Streamlit if not already present
-            if "chat_session" not in st.session_state:
-                st.session_state.chat_session = model.start_chat(history=[])
+    # Set up Google Gemini-Pro AI model
+    gen_ai.configure(api_key=GOOGLE_API_KEY)
+    model = gen_ai.GenerativeModel('gemini-pro')
 
-            with st.expander("Ingredients"):
-                # Provide the merged ingredient list to Gemini for analysis
-                gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources.")
+    # Initialize chat session in Streamlit if not already present
+    if "chat_session" not in st.session_state:
+        st.session_state.chat_session = model.start_chat(history=[])
+        
+    with st.expander("Ingredients"):
+        # Provide the merged ingredient list to Gemini for analysis
+        gemini_response = st.session_state.chat_session.send_message(f"Please provide each and every ingredient list of the {title}, if it is available on {url}. Fetch from it otherwise fetch from other sources. Merged ingredients: {ingredients_website}.")
+            
+            # Extract Gemini-generated ingredients
+        ingredients_gemini = gemini_response.parts[0].text.strip().split("\n")
+            
+            # Merge website-extracted and Gemini-generated ingredients, remove duplicates
+        merged_ingredients = list(set(ingredients_website + ingredients_gemini))
 
-                # Provide the final response to Gemini
-                final_response = st.session_state.chat_session.send_message(f"Here is the ingredient list as suggested in website {ingredients_list} and these are the AI generated ingredient list {gemini_response} please provide the final ingredient list and analyze the ingredients as safe and harmful indiacted by green tick and red cross respectively. Be a little harsh on selecting the harmful ingredients with valid reasoning")
-                st.markdown(final_response.text)
+            # Provide the merged ingredient list to Gemini for analysis
+        gemini_final_response = st.session_state.chat_session.send_message(f"Here is the merged ingredient list: {merged_ingredients}. Please analyze and provide the final ingredient list and put a ✅ emoji next to safe ingredients and a ❌ next to harmful ingredients. Don't include allergen information or extra details, stick to the ingredients only.")
+        st.markdown(gemini_final_response.text)
 
-                # Send harmful ingredients to Gemini for further analysis
-                safety_score_response = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in {final_response} and compute the safety_score = 100 - 4 * number of harmful ingredients and return the safety score as a number only")
+        # Send harmful ingredients to Gemini for further analysis
+        safety_score_response = st.session_state.chat_session.send_message(f"Compute the number of harmful ingredients in {gemini_final_response} and compute the safety_score = 100 - 4 * number of harmful ingredients and return the safety score as a number only")
 
             
-            st.markdown(f"Safety Score: {safety_score_response.text}")
+    st.markdown(f"Safety Score: {safety_score_response.text}")
 
-            harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
-            st.markdown(harmful_analysis.text)
+    harmful_analysis = st.session_state.chat_session.send_message(f"In a table format give the harmful ingredients and their effects in another column keep the effects very short and precise")
+    st.markdown(harmful_analysis.text)
 
-            # Prompt Gemini for product recommendation in the same category
-            category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link keep the content precise and short to the point do not brief.")
+    # Prompt Gemini for product recommendation in the same category
+    category_recommendation = st.session_state.chat_session.send_message(f"Please recommend a product in the same category as that of {title} that is better than the current product along with an Amazon link keep the content precise and short to the point do not brief.")
 
-            # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
-            reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary keep it super short not exceeding more than four lines.")
-            st.write(category_recommendation.text)
-            st.write(reviews_summary.text)
-
-        else:
-            st.write(str(response.status_code) + ' - Error loading the page')
+    # Prompt Gemini to analyze top 5 customer reviews and provide an overall summary
+    reviews_summary = st.session_state.chat_session.send_message(f"Please analyze the top 5 customer reviews of {title} with given url {url} and provide an overall summary keep it super short not exceeding more than four lines.")
+    st.write(category_recommendation.text)
+    st.write(reviews_summary.text)
