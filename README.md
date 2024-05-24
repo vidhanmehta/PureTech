@@ -1,6 +1,5 @@
 # ingredients_analyzer
 
-# PureTech Product Analyzer
 
 PureTech Product Analyzer is a Streamlit web application that allows users to analyze product details, safety scores, harmful ingredients, category recommendations, and customer reviews for various products from different e-commerce websites.
 
@@ -15,7 +14,7 @@ PureTech Product Analyzer is a Streamlit web application that allows users to an
 
 ## Usage
 
-1. Visit the [PureTech Product Analyzer](https://your-app-url.com) web app.
+1. Visit the Link web app.
 2. Enter the URL of the product you want to analyze.
 3. Click on the "Your Health in a Click" button to analyze the product.
 4. Explore the product details, safety score, harmful ingredients, recommendations, and customer reviews.
@@ -29,24 +28,16 @@ To run the PureTech Product Analyzer locally, follow these steps:
 2. Navigate to the project directory:
 
 3. Install the required dependencies:
+pip install -r requirements.txt
+
 
 4. Run the Streamlit app:
+streamlit run app.py
+
 
 5. Access the app in your web browser at `http://localhost:8501`.
 
-## Technologies Used
 
-- Python
-- Streamlit
-- BeautifulSoup
-- Google Gemini-Pro AI
-
-## Contributors
-
-- [Sumith](https://github.com/sumith1896)
-- [Vidhan](https://github.com/vidhan2002)
-- [Swathi](https://github.com/swathi-1212)
-- [Venkat](https://github.com/venkat-krish)
 
 ## License
 
