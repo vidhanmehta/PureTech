@@ -97,4 +97,4 @@ if url:
 
     else:
         st.error("Invalid URL. Please enter a valid product URL.")
-st.markdown("<p style='text-align: center;'>Made by - Sumith, Vidhan, Swathi, and Venkat</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Made by - Antriksh AI</p>", unsafe_allow_html=True)
