@@ -63,7 +63,7 @@ if url:
 
                 # Set up Google Gemini-Pro AI model
                 gen_ai.configure(api_key=GOOGLE_API_KEY)
-                model = gen_ai.GenerativeModel('gemini-pro')
+                model = gen_ai.GenerativeModel('gemini-1.5-flash')
 
                 # Initialize chat session in Streamlit if not already present
                 if "chat_session" not in st.session_state:
